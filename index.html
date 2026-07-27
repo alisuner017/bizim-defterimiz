@@ -1,1 +1,623 @@
+<!DOCTYPE html>
+<html lang="tr">
 
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Bizim Defterimiz</title>
+
+
+<!-- Firebase -->
+<script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+
+body{
+
+    min-height:100vh;
+    background:
+    linear-gradient(
+        135deg,
+        #1b1b2f,
+        #162447,
+        #1f4068
+    );
+
+    color:white;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:20px;
+
+}
+
+
+
+.container{
+
+    width:100%;
+    max-width:450px;
+
+    background:rgba(255,255,255,0.08);
+
+    backdrop-filter:blur(15px);
+
+    border-radius:25px;
+
+    padding:30px;
+
+    box-shadow:
+    0 20px 50px rgba(0,0,0,.35);
+
+}
+
+
+
+.title{
+
+    text-align:center;
+
+    font-size:32px;
+
+    margin-bottom:10px;
+
+    letter-spacing:1px;
+
+}
+
+
+
+.subtitle{
+
+    text-align:center;
+
+    opacity:.8;
+
+    font-size:14px;
+
+    margin-bottom:30px;
+
+}
+
+
+
+
+input,
+textarea,
+button{
+
+    width:100%;
+
+    border:none;
+
+    outline:none;
+
+    border-radius:15px;
+
+    padding:15px;
+
+    font-size:16px;
+
+}
+
+
+
+input,
+textarea{
+
+    background:rgba(255,255,255,.12);
+
+    color:white;
+
+    margin-bottom:15px;
+
+}
+
+
+
+input::placeholder,
+textarea::placeholder{
+
+    color:rgba(255,255,255,.6);
+
+}
+
+
+
+button{
+
+    background:#e94560;
+
+    color:white;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+    transition:.3s;
+
+}
+
+
+
+button:hover{
+
+    transform:scale(1.03);
+
+}
+
+
+
+.hidden{
+
+    display:none;
+
+}
+
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1 class="title">
+🤍 Bizim Defterimiz
+</h1>
+
+
+<p class="subtitle">
+Sadece bize ait küçük bir alan...
+</p>
+
+
+<!-- Şifre Alanı -->
+
+<div id="passwordBox">
+
+<input 
+type="password"
+id="passwordInput"
+placeholder="Şifre">
+
+
+<button id="loginBtn">
+Giriş Yap
+</button>
+
+
+</div>
+
+
+
+<!-- Not Alanı -->
+
+<div id="notesBox" class="hidden">
+
+
+<textarea 
+id="noteInput"
+rows="5"
+placeholder="Buraya bir şeyler yaz..."></textarea>
+
+
+<button id="saveBtn">
+Notu Kaydet
+</button>
+
+
+<div id="notesList">
+
+</div>
+
+
+</div>
+
+
+
+</div>
+<!-- Notların Görüneceği Alan -->
+
+<style>
+
+#notesList{
+
+    margin-top:25px;
+
+}
+
+
+
+.note{
+
+    background:rgba(255,255,255,.1);
+
+    border-radius:18px;
+
+    padding:15px;
+
+    margin-bottom:15px;
+
+    word-wrap:break-word;
+
+    animation:fade .4s ease;
+
+}
+
+
+
+.noteDate{
+
+    font-size:12px;
+
+    opacity:.6;
+
+    margin-top:8px;
+
+}
+
+
+
+@keyframes fade{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(10px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+
+
+.logout{
+
+    margin-top:15px;
+
+    background:#444;
+
+}
+
+
+
+</style>
+
+
+<!-- Şimdilik boş bırakılan yapı -->
+
+<div id="extraArea">
+
+
+</div>
+<script type="module">
+
+// Firebase bağlantısı
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import { 
+getFirestore,
+collection,
+addDoc,
+getDocs,
+query,
+orderBy
+}
+from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+
+// SENİN FIREBASE BİLGİLERİN BURAYA GELECEK
+const firebaseConfig = {
+  apiKey: "AIzaSyDFKMr27HtRccTHuCufj2TNj06M4flboZM",
+  authDomain: "bizim-defterimiz-c26ab.firebaseapp.com",
+  projectId: "bizim-defterimiz-c26ab",
+  storageBucket: "bizim-defterimiz-c26ab.firebasestorage.app",
+  messagingSenderId: "876426650286",
+  appId: "1:876426650286:web:eaa183800551d00338433f"
+};
+
+
+
+// Firebase başlatma
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+
+
+// Şifre
+
+const dogruSifre = "1234";
+
+
+
+const passwordBox = document.getElementById("passwordBox");
+
+const notesBox = document.getElementById("notesBox");
+
+const passwordInput = document.getElementById("passwordInput");
+
+const loginBtn = document.getElementById("loginBtn");
+
+
+
+
+loginBtn.addEventListener("click",()=>{
+
+
+    if(passwordInput.value === dogruSifre){
+
+
+        passwordBox.classList.add("hidden");
+
+        notesBox.classList.remove("hidden");
+
+
+    }
+
+    else{
+
+        alert("Şifre yanlış 🤍");
+
+    }
+
+
+});
+
+
+
+</script>
+<script type="module">
+
+
+const noteInput = document.getElementById("noteInput");
+
+const saveBtn = document.getElementById("saveBtn");
+
+const notesList = document.getElementById("notesList");
+
+
+
+
+// Not kaydetme
+
+saveBtn.addEventListener("click", async()=>{
+
+
+    const text = noteInput.value.trim();
+
+
+    if(text === ""){
+
+        alert("Önce bir şey yaz 🤍");
+
+        return;
+
+    }
+
+
+
+    try{
+
+
+        await addDoc(collection(db,"notes"),{
+
+            text:text,
+
+            date:new Date().toLocaleString("tr-TR")
+
+        });
+
+
+
+        noteInput.value="";
+
+
+        loadNotes();
+
+
+
+    }
+
+    catch(error){
+
+
+        console.log(error);
+
+        alert("Not kaydedilemedi");
+
+
+    }
+
+
+
+});
+
+
+
+
+
+
+
+// Notları çekme
+
+async function loadNotes(){
+
+
+    notesList.innerHTML="";
+
+
+
+    const q = query(
+        collection(db,"notes"),
+        orderBy("date","desc")
+    );
+
+
+
+    const snapshot = await getDocs(q);
+
+
+
+    snapshot.forEach((doc)=>{
+
+
+        const data = doc.data();
+
+
+
+        const div = document.createElement("div");
+
+
+        div.className="note";
+
+
+
+        div.innerHTML = `
+
+        ${data.text}
+
+        <div class="noteDate">
+
+        ${data.date}
+
+        </div>
+
+        `;
+
+
+
+        notesList.appendChild(div);
+
+
+
+    });
+
+
+
+}
+
+
+
+
+
+// girişten sonra notları getir
+
+loadNotes();
+
+
+
+</script>
+<style>
+
+@media(max-width:500px){
+
+    body{
+
+        padding:12px;
+
+    }
+
+
+    .container{
+
+        padding:22px;
+
+        border-radius:20px;
+
+    }
+
+
+    .title{
+
+        font-size:26px;
+
+    }
+
+
+    textarea,
+    input,
+    button{
+
+        font-size:15px;
+
+        padding:13px;
+
+    }
+
+}
+
+
+</style>
+
+
+
+<button 
+id="logoutBtn"
+class="logout">
+
+Çıkış Yap
+
+</button>
+<script type="module">
+
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+
+logoutBtn.addEventListener("click",()=>{
+
+
+    notesBox.classList.add("hidden");
+
+    passwordBox.classList.remove("hidden");
+
+
+    passwordInput.value="";
+
+
+});
+
+
+
+</script>
+
+
+
+</body>
+
+</html>
